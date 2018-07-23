@@ -54,7 +54,7 @@ def get_football_lines
   end
 
   driver.quit
-  
+
 end 
 
 
@@ -76,6 +76,24 @@ def get_politics_lines
     sleep(1)
   end
 
+  doc = Nokogiri::HTML(driver.page_source)
+  coupons = doc.css('sp-coupon')
+
+  coupons.each do |coupon|
+    market_name = coupon.css('.market-name').text.gsub!(/[[:space:]]+/, "")
+    outcomes = coupon.css('.outcomes')
+    prices = coupon.css('.bet-price')
+
+    puts market_name
+    outcomes.each_with_index do |outcome, i|
+      print = "#{outcome.text}, #{prices[i].text}"
+      print.gsub!(/[[:space:]]+/, "")
+      puts print
+    end 
+    puts "\n"
+  end
+  
+  driver.quit
 end
 
 get_politics_lines()
