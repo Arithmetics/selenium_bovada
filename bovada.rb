@@ -52,6 +52,9 @@ def get_football_lines
       file.puts "\n"
     end
   end
+
+  driver.quit
+  
 end 
 
 
@@ -75,7 +78,6 @@ def get_politics_lines
 
 end
 
+get_politics_lines()
 
 
-
-driver.quit
