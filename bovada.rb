@@ -1,5 +1,6 @@
 require 'selenium-webdriver'
 require 'nokogiri'
+require './email.rb'
 
 
 ############### NFL Game Lines ###############
@@ -68,8 +69,9 @@ def get_politics_lines
   sleep(1)
   driver.find_element(xpath: "/html/body/bx-site/ng-component/div/sp-main/div/sp-nav/sp-nav-primary/nav/ul/li[10]/li").click()
   sleep(1)
-  driver.find_element(xpath: "/html/body/bx-site/ng-component/div/sp-main/div/sp-nav/sp-nav-secondary/div[1]/div/div/div[2]/ul/li[19]/sp-nav-link/a").click()
+  driver.find_element(:link, 'Politics').click()
   sleep(1)
+
 
   until driver.find_elements(id: 'showMore').count < 1
     driver.find_element(id: 'showMore').click
@@ -78,24 +80,29 @@ def get_politics_lines
 
   doc = Nokogiri::HTML(driver.page_source)
   coupons = doc.css('sp-coupon')
+  email = ""
 
   coupons.each do |coupon|
     market_name = coupon.css('.market-name').text.gsub!(/[[:space:]]+/, "")
     outcomes = coupon.css('.outcomes')
     prices = coupon.css('.bet-price')
-
-    puts market_name
+    email += "<strong> #{market_name} </strong>"
+    email += "<br>"
     outcomes.each_with_index do |outcome, i|
       print = "#{outcome.text}, #{prices[i].text}"
       print.gsub!(/[[:space:]]+/, "")
-      puts print
+      email += print
+      email += "<br>"
     end 
-    puts "\n"
+    email += "<br>"
   end
+
+  send_email('brock.m.tillotson@gmail.com', email)
   
+  puts email
   driver.quit
 end
 
-get_politics_lines()
+
 
 
