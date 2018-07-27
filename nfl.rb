@@ -107,7 +107,7 @@ teams = { "dagr" => nil,
 
 driver = Selenium::WebDriver.for :firefox
 
-
+########### driver setup and login #############
 driver.navigate.to "https://www.nfl.com/login?s=fantasy&returnTo=http%3A%2F%2Ffantasy.nfl.com%2Fleague%2F400302"
 sleep(1)
 username = driver.find_element(id: "fanProfileEmailUsername")
@@ -118,6 +118,8 @@ username.send_keys("brock.m.tillotson@gmail.com")
 password.send_keys("rock7900")
 submit.click()
 sleep(5)
+
+######## stat collection functions ############
 
 
 def get_final_standings(year, driver, team_key)
@@ -237,16 +239,17 @@ end
 
 
 def get_full_years_games(year, driver, team_key, teams)
-
   
-  def get_one_game(year, team_id, week, driver)
 
+  def get_one_game(year, team_id, week, driver)
+    puts "new navigation"
     driver.navigate.to "http://fantasy.nfl.com/league/400302/history/#{year}/teamgamecenter?teamId=#{team_id}&week=#{week}#"
     sleep(5)
     doc = Nokogiri::HTML(driver.page_source)
 
     team_pane = doc.css(".teamWrap-1")
-    
+    team_name = team_pane.css("h4").text
+    puts team_name
     starters = {
       qb_0: team_pane.css(".player-QB-0"),
       rb_0: team_pane.css(".player-RB-0"),
@@ -270,11 +273,17 @@ def get_full_years_games(year, driver, team_key, teams)
         }
       end
     end
-    
+    puts game_stats
     game_stats
+
   end
   
-  puts get_one_game(2017, 1, 1, driver)
+  (1..12).each do |team_id|
+    (1..13).each do |week|
+      get_one_game(year, team_id, 1, driver)
+    end
+  end
+  
 
 end
 
