@@ -13,9 +13,9 @@ def get_football_lines
 
   driver.find_element(xpath: "/html/body/bx-site/ng-component/bx-header-ch/div/nav/ul/li[1]/a").click()
   sleep(1)
-  driver.find_element(xpath: "/html/body/bx-site/ng-component/div/sp-main/div/sp-nav/sp-nav-primary/nav/ul/li[10]/li").click()
+  driver.find_element(:link, 'All Sports (A-Z)').click()
   sleep(1)
-  driver.find_element(xpath: "/html/body/bx-site/ng-component/div/sp-main/div/sp-nav/sp-nav-primary/nav/ul/li[5]/sp-nav-link/a").click()
+  driver.find_element(:link, 'Football').click()
   sleep(1)
 
   until driver.find_elements(id: 'showMore').count < 1
@@ -65,9 +65,9 @@ def get_politics_lines
   driver.manage.window.minimize
   
   driver.navigate.to "https://www.bovada.lv"
-  driver.find_element(xpath: "/html/body/bx-site/ng-component/bx-header-ch/div/nav/ul/li[1]/a").click()
+  driver.find_element(:link, 'Sports').click()
   sleep(1)
-  driver.find_element(xpath: "/html/body/bx-site/ng-component/div/sp-main/div/sp-nav/sp-nav-primary/nav/ul/li[10]/li").click()
+  driver.find_element(:link, 'All Sports (A-Z)').click()
   sleep(1)
   driver.find_element(:link, 'Politics').click()
   sleep(1)
@@ -106,3 +106,4 @@ end
 
 
 
+get_football_lines
