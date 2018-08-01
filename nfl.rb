@@ -1,6 +1,7 @@
 require 'selenium-webdriver'
 require 'nokogiri'
 require 'csv'
+require 'pp'
 
 team_key = {
   "Cooks Me Baby One More Time" => "jerms",
@@ -100,9 +101,10 @@ teams = { "dagr" => nil,
   "trox" => nil,
   }
 
-  teams.each do |k,v|
-    teams[k] = { games_played: 0, wins: 0, losses: 0, pts_for: 0 }
-  end
+  
+teams.each do |k,v|
+  teams[k] = { games_played: 0, wins: 0, losses: 0, pts_for: 0 }
+end
 
 
 driver = Selenium::WebDriver.for :firefox
@@ -125,7 +127,7 @@ sleep(5)
 def get_final_standings(year, driver, team_key)
   
   driver.navigate.to "http://fantasy.nfl.com/league/400302/history/#{year}/standings"
-  sleep(5)
+  sleep(3)
   doc = Nokogiri::HTML(driver.page_source)
   standing_block = doc.css('#finalStandings')
 
@@ -238,13 +240,13 @@ def get_playoff_games(year, driver, team_key, teams)
 end
 
 
-def get_full_years_games(year, driver, team_key, teams)
+def get_full_years_games(year, driver, team_key, owners)
   
 
-  def get_one_game(year, team_id, week, driver)
+  def get_one_game(year, team_id, week, driver, owners, team_key)
     puts "new navigation"
     driver.navigate.to "http://fantasy.nfl.com/league/400302/history/#{year}/teamgamecenter?teamId=#{team_id}&week=#{week}#"
-    sleep(5)
+    sleep(3)
     doc = Nokogiri::HTML(driver.page_source)
 
     team_pane = doc.css(".teamWrap-1")
@@ -257,7 +259,7 @@ def get_full_years_games(year, driver, team_key, teams)
       wr_0: team_pane.css(".player-WR-0"),
       wr_1: team_pane.css(".player-WR-1"),
       te_0: team_pane.css(".player-TE-0"),
-      op_0: team_pane.css(".player-Q/R/W/T-0"),
+      op_0: team_pane.css(".odd")[3],
       def_0: team_pane.css(".player-DEF-0"),
       k_0: team_pane.css(".player-K-0")
     }
@@ -265,30 +267,132 @@ def get_full_years_games(year, driver, team_key, teams)
     game_stats = {}
 
     starters.each do |k,v|
-      if v.length > 0
+      if v.css(".playerName").length > 0
         game_stats[k] = {
           name: v.css(".playerName").text,
           id: v.css(".playerName")[0]["href"][/(?<=playerId=)(.*)/],
           pts: v.css(".playerTotal").text
         }
+        puts game_stats[k]
       end
     end
-    puts game_stats
-    game_stats
+    
+    if team_name == "Saved by the Bell"
+      if year == 2013
+        team_name = "Saved by the Bell 2013"
+      elsif year == 2015
+        team_name = "Saved by the Bell 2015"
+      end
+    end
+
+
+    owners[team_key[team_name]][year.to_s].push(game_stats)
 
   end
   
   (1..12).each do |team_id|
     (1..13).each do |week|
-      get_one_game(year, team_id, 1, driver)
+      get_one_game(year, team_id, week, driver, owners, team_key)
     end
   end
-  
 
+end
+
+owners = { "dagr" => nil,
+  "brock" => nil,
+  "kern" => nil,
+  "klo" => nil,
+  "joe" => nil,
+  "mcgunn" => nil,
+  "jared" => nil,
+  "jhigh" => nil,
+  "tim" => nil,
+  "woody" => nil,
+  "jerms" => nil,
+  "mike" => nil,
+  "kjemp" => nil,
+  "flack" => nil,
+  "trox" => nil,
+  }
+
+owners.each do |k,v|
+  owners[k] = {
+    "2011" => [],
+    "2012" => [],
+    "2013" => [],
+    "2014" => [],
+    "2015" => [],
+    "2016" => [],
+    "2017" => [],
+   }
+end
+
+def consolodate_year(year_collection)
+  full_year_pts = {qb: 0, rb: 0, wr: 0, te: 0, def: 0, k: 0}
+
+  year_collection.each do |game|
+    if game[:qb_0]
+      full_year_pts[:qb] += game[:qb_0][:pts].to_f
+    end
+
+    if game[:rb_0]
+      full_year_pts[:rb] += game[:rb_0][:pts].to_f
+    end 
+
+    if game[:rb_1]
+      full_year_pts[:rb] += game[:rb_1][:pts].to_f
+    end
+
+    if game[:wr_0]
+      full_year_pts[:wr] += game[:wr_0][:pts].to_f
+    end
+
+    if game[:wr_1]
+      full_year_pts[:wr] += game[:wr_1][:pts].to_f
+    end
+
+    if game[:te_0]
+      full_year_pts[:te] += game[:te_0][:pts].to_f
+    end
+
+    if game[:def_0]
+      full_year_pts[:def] += game[:def_0][:pts].to_f
+    end
+
+    if game[:k_0]
+      full_year_pts[:k] += game[:k_0][:pts].to_f
+    end
+
+    if game[:op_0]
+      full_year_pts[:qb] += game[:op_0][:pts].to_f
+    end
+
+  end
+
+  full_year_pts
 end
 
 years = [2011, 2012, 2013, 2014, 2015, 2016, 2017]
 
-get_full_years_games(2017, driver, team_key, teams)
+
+years.each do |year|
+  get_full_years_games(year, driver, team_key, owners)
+end
+
+owners.each do |owner_key, owner_data|
+  owner_data.each do |year_key, year_data|
+    owners[owner_key][year_key] = consolodate_year(year_data)
+  end
+end
+
+
+
+CSV.open('each_year_position.csv', "ab", force_quotes: false) do |csv|
+  owners.each do |owner_key, owner_data|
+    owner_data.each do |year_key, year_data|
+      csv << [owner_key, year_key, year_data[:qb], year_data[:rb], year_data[:wr],year_data[:te], year_data[:def], year_data[:k]]
+    end
+  end
+end
 
 driver.quit
