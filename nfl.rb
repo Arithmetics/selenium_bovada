@@ -103,7 +103,7 @@ teams = { "dagr" => nil,
 
   
 teams.each do |k,v|
-  teams[k] = { games_played: 0, wins: 0, losses: 0, pts_for: 0 }
+  teams[k] = { games_played: 0, wins: 0, losses: 0, pts_for: 0, pts_against: 0 }
 end
 
 
@@ -213,18 +213,22 @@ def get_playoff_games(year, driver, team_key, teams)
       teams[team_key[player_1]][:games_played] += 1
       teams[team_key[player_1]][:wins] += 1
       teams[team_key[player_1]][:pts_for] += player_1_score
+      teams[team_key[player_1]][:pts_against] += player_2_score
 
       teams[team_key[player_2]][:games_played] += 1
       teams[team_key[player_2]][:losses] += 1
       teams[team_key[player_2]][:pts_for] += player_2_score
+      teams[team_key[player_2]][:pts_against] += player_1_score
     else
       teams[team_key[player_2]][:games_played] += 1
       teams[team_key[player_2]][:wins] += 1
       teams[team_key[player_2]][:pts_for] += player_2_score
+      teams[team_key[player_2]][:pts_against] += player_1_score
 
       teams[team_key[player_1]][:games_played] += 1
       teams[team_key[player_1]][:losses] += 1
       teams[team_key[player_1]][:pts_for] += player_1_score
+      teams[team_key[player_1]][:pts_against] += player_2_score
     end
 
     teams
@@ -298,6 +302,8 @@ def get_full_years_games(year, driver, team_key, owners)
 
 end
 
+
+##### part of get full years games
 owners = { "dagr" => nil,
   "brock" => nil,
   "kern" => nil,
@@ -376,22 +382,37 @@ years = [2011, 2012, 2013, 2014, 2015, 2016, 2017]
 
 
 years.each do |year|
-  get_full_years_games(year, driver, team_key, owners)
+
+  ##### part of get full years games
+  # get_full_years_games(year, driver, team_key, owners)
+
+
+  get_playoff_games(year, driver, team_key, teams)
 end
 
-owners.each do |owner_key, owner_data|
-  owner_data.each do |year_key, year_data|
-    owners[owner_key][year_key] = consolodate_year(year_data)
-  end
-end
+
+##### part of get full years games
+# owners.each do |owner_key, owner_data|
+#   owner_data.each do |year_key, year_data|
+#     owners[owner_key][year_key] = consolodate_year(year_data)
+#   end
+# end
 
 
+##### part of get full years games
 
-CSV.open('each_year_position.csv', "ab", force_quotes: false) do |csv|
-  owners.each do |owner_key, owner_data|
-    owner_data.each do |year_key, year_data|
-      csv << [owner_key, year_key, year_data[:qb], year_data[:rb], year_data[:wr],year_data[:te], year_data[:def], year_data[:k]]
-    end
+# CSV.open('each_year_position.csv', "ab", force_quotes: false) do |csv|
+#   owners.each do |owner_key, owner_data|
+#     owner_data.each do |year_key, year_data|
+#       csv << [owner_key, year_key, year_data[:qb], year_data[:rb], year_data[:wr],year_data[:te], year_data[:def], year_data[:k]]
+#     end
+#   end
+# end
+
+
+CSV.open('playoff_records.csv', "ab", force_quotes: false) do |csv|
+  teams.each do |team_key, team_value|
+    csv << [team_key, team_value[:games_played], team_value[:wins], team_value[:losses], team_value[:pts_for], team_value[:pts_against]]
   end
 end
 
