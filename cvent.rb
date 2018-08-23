@@ -77,7 +77,7 @@ end
 
 params = {
           username: 'brock.tillotson@opusteam.com', 
-          password: 'CVRock7900', 
+          password: 'default', 
           driver: driver, 
           event_name: 'ZZZ_Brocks_Cool_Event', 
         }
